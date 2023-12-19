@@ -32,30 +32,25 @@ function checkAndSetPref(pref) {
             // we need to ensure that spash screen is gone
             let splashGone = false;
             let scriptFinished = false;
+
             setInterval(() => {
                 if (this.document.getElementById('apply_preferences_btn') != null) {
                     if (!splashGone) console.log('[QFP (Script)] Splash screen is gone');
                     splashGone = true;
                 }
 
-
                 if (splashGone && !scriptFinished) {
-                    // ensure we are on a P&F page
-                    let pageURL = new URL(window.location.href);
-                    if (pageURL.origin !== 'https://quilter.xplan-mortgage.iress.co.uk' && (!pageURL.href?.toString().includes('/#/') && !pageURL.href?.toString().includes('/preferences'))) {
-                        console.log('[QFP (Script) - Error] Not on a P&F page');
-                        return;
-                    }
+                    // subscribe to any changes to the class 'wrap' div
+                    let wrap = document.getElementsByClassName('wrap')[0];
+                    wrap.addEventListener('DOMSubtreeModified', (test) => {
+                        updatePrefDropDowns();
+                        scriptFinished = true;
+                    });
+                }
 
-                    // loop over all of the pref dropdown and select no
-                    for (let i = 0; i <= 17; i++) {
-                        let init_pref = document.getElementById(`initialPref_${i}`);
-                        let agree_pref = document.getElementById(`agreedPref_${i}`);
-                        checkAndSetPref(init_pref);
-                        checkAndSetPref(agree_pref);
-                    }
-                    console.log('[QFP (Script)] All preferences set to "No"');
-
+                // we have refreshed the page and the dom hasnt yet updated
+                if (splashGone && !scriptFinished) {
+                    updatePrefDropDowns();
                     scriptFinished = true;
                 }
             }, 1000);
@@ -63,6 +58,23 @@ function checkAndSetPref(pref) {
             console.error(`[QFP (Script) - Error] ${err}`);
             alert(`[QFP (Script) - Error] ${err}`);
         }
-
     }, false);
+
+    async function updatePrefDropDowns() {
+        // ensure we are on a P&F page
+        let pageURL = new URL(window.location.href);
+        if (pageURL.origin !== 'https://quilter.xplan-mortgage.iress.co.uk' && (!pageURL.href?.toString().includes('/#/') && !pageURL.href?.toString().includes('/preferences'))) {
+            console.log('[QFP (Script) - Error] Not on a P&F page');
+            return;
+        }
+
+        // loop over all of the pref dropdown and select no
+        for (let i = 0; i <= 17; i++) {
+            let init_pref = document.getElementById(`initialPref_${i}`);
+            let agree_pref = document.getElementById(`agreedPref_${i}`);
+            checkAndSetPref(init_pref);
+            checkAndSetPref(agree_pref);
+        }
+        console.log('[QFP (Script)] All preferences set to "No"');
+    }
 })();
